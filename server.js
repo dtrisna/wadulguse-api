@@ -15,19 +15,21 @@ app.use('/uploads', express.static('uploads'));
 app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
 
-// Swagger
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-// Test route
 app.get('/', (req, res) => {
   res.json({
     message: 'API WadulGuse berhasil berjalan',
   });
 });
 
-const PORT = process.env.PORT || 3000;
+module.exports = app;
 
-app.listen(PORT, () => {
-  console.log(`Server berjalan di http://localhost:${PORT}`);
-  console.log(`Swagger berjalan di http://localhost:${PORT}/api-docs`);
-});
+if (require.main === module) {
+  const PORT = process.env.PORT || 3000;
+
+  app.listen(PORT, () => {
+    console.log(`Server berjalan di http://localhost:${PORT}`);
+    console.log(`Swagger berjalan di http://localhost:${PORT}/api-docs`);
+  });
+}
