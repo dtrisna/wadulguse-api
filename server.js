@@ -4,9 +4,11 @@ const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./swagger');
 const authRoutes = require('./routes/authRoutes');
 const profileRoutes = require('./routes/profileRoutes');
-const laporanRoutes = require('./routes/laporanRoutes');
-const adminRoutes = require('./routes/adminRoutes');
-const notifikasiRoutes = require('./routes/notifikasiRoutes');
+const laporanRoutes = require("./routes/laporanRoutes");
+const adminRoutes = require("./routes/adminRoutes");
+const notifikasiRoutes = require("./routes/notifikasiRoutes");
+const komentarRoutes = require('./routes/komentarRoutes');
+const reactionRoutes = require('./routes/reactionRoutes');
 require('dotenv').config();
 
 const app = express();
@@ -17,9 +19,11 @@ app.use('/uploads', express.static('uploads'));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
-app.use('/api/laporan', laporanRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/notifikasi', notifikasiRoutes);
+app.use("/api/laporan", laporanRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/api/notifikasi", notifikasiRoutes);
+app.use('/api/komentar', komentarRoutes);
+app.use('/api/reactions', reactionRoutes);
 
 app.get('/api-docs.json', (req, res) => {
   res.json(swaggerSpec);
