@@ -1,7 +1,4 @@
-const supabaseModule = require('../config/db');
-const supabase = supabaseModule.supabase || supabaseModule;
-
-const TABLE_KOMENTAR = 'komentar';
+const pool = require('../config/db');
 
 const getUserId = (req) => {
   return req.user?.id || req.user?.user_id || req.user?.sub || req.userId;
@@ -20,54 +17,41 @@ const tambahKomentar = async (req, res) => {
     if (!Number.isInteger(laporanId)) {
       return res.status(400).json({
         success: false,
-        message: 'laporan_id harus berupa angka'
+        message: 'laporan_id harus berupa angka',
       });
     }
 
     if (!Number.isInteger(userId)) {
       return res.status(401).json({
         success: false,
-        message: 'User belum terautentikasi atau user_id tidak valid'
+        message: 'User belum terautentikasi atau user_id tidak valid',
       });
     }
 
     if (!isiKomentar) {
       return res.status(400).json({
         success: false,
-        message: 'Komentar wajib diisi'
+        message: 'Komentar wajib diisi',
       });
     }
 
-    const { data, error } = await supabase
-      .from(TABLE_KOMENTAR)
-      .insert([
-        {
-          laporan_id: laporanId,
-          user_id: userId,
-          komentar: isiKomentar
-        }
-      ])
-      .select()
-      .single();
-
-    if (error) {
-      return res.status(500).json({
-        success: false,
-        message: 'Gagal menambahkan komentar',
-        error: error.message
-      });
-    }
+    const result = await pool.query(
+      `INSERT INTO komentar (laporan_id, user_id, komentar)
+       VALUES ($1, $2, $3)
+       RETURNING *`,
+      [laporanId, userId, isiKomentar]
+    );
 
     return res.status(201).json({
       success: true,
       message: 'Komentar berhasil ditambahkan',
-      data
+      data: result.rows[0],
     });
   } catch (error) {
     return res.status(500).json({
       success: false,
       message: 'Terjadi kesalahan pada server',
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -75,29 +59,21 @@ const tambahKomentar = async (req, res) => {
 // Lihat semua komentar
 const getSemuaKomentar = async (req, res) => {
   try {
-    const { data, error } = await supabase
-      .from(TABLE_KOMENTAR)
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      return res.status(500).json({
-        success: false,
-        message: 'Gagal mengambil data komentar',
-        error: error.message
-      });
-    }
+    const result = await pool.query(
+      `SELECT * FROM komentar
+       ORDER BY created_at DESC`
+    );
 
     return res.status(200).json({
       success: true,
       message: 'Data komentar berhasil diambil',
-      data
+      data: result.rows,
     });
   } catch (error) {
     return res.status(500).json({
       success: false,
       message: 'Terjadi kesalahan pada server',
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -111,34 +87,27 @@ const getKomentarByLaporan = async (req, res) => {
     if (!Number.isInteger(laporanId)) {
       return res.status(400).json({
         success: false,
-        message: 'laporan_id harus berupa angka'
+        message: 'laporan_id harus berupa angka',
       });
     }
 
-    const { data, error } = await supabase
-      .from(TABLE_KOMENTAR)
-      .select('*')
-      .eq('laporan_id', laporanId)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      return res.status(500).json({
-        success: false,
-        message: 'Gagal mengambil komentar berdasarkan laporan',
-        error: error.message
-      });
-    }
+    const result = await pool.query(
+      `SELECT * FROM komentar
+       WHERE laporan_id = $1
+       ORDER BY created_at DESC`,
+      [laporanId]
+    );
 
     return res.status(200).json({
       success: true,
       message: 'Komentar berdasarkan laporan berhasil diambil',
-      data
+      data: result.rows,
     });
   } catch (error) {
     return res.status(500).json({
       success: false,
       message: 'Terjadi kesalahan pada server',
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -157,64 +126,54 @@ const updateKomentar = async (req, res) => {
     if (!Number.isInteger(komentarId)) {
       return res.status(400).json({
         success: false,
-        message: 'id komentar harus berupa angka'
+        message: 'id komentar harus berupa angka',
       });
     }
 
     if (!isiKomentar) {
       return res.status(400).json({
         success: false,
-        message: 'Komentar wajib diisi'
+        message: 'Komentar wajib diisi',
       });
     }
 
-    const { data: dataKomentar, error: findError } = await supabase
-      .from(TABLE_KOMENTAR)
-      .select('*')
-      .eq('id', komentarId)
-      .single();
+    const cekKomentar = await pool.query(
+      `SELECT * FROM komentar WHERE id = $1`,
+      [komentarId]
+    );
 
-    if (findError || !dataKomentar) {
+    if (cekKomentar.rows.length === 0) {
       return res.status(404).json({
         success: false,
-        message: 'Komentar tidak ditemukan'
+        message: 'Komentar tidak ditemukan',
       });
     }
 
-    if (Number(dataKomentar.user_id) !== userId) {
+    if (Number(cekKomentar.rows[0].user_id) !== userId) {
       return res.status(403).json({
         success: false,
-        message: 'Tidak memiliki izin untuk mengedit komentar ini'
+        message: 'Tidak memiliki izin untuk mengedit komentar ini',
       });
     }
 
-    const { data, error } = await supabase
-      .from(TABLE_KOMENTAR)
-      .update({
-        komentar: isiKomentar
-      })
-      .eq('id', komentarId)
-      .select()
-      .single();
-
-    if (error) {
-      return res.status(500).json({
-        success: false,
-        message: 'Gagal mengedit komentar',
-        error: error.message
-      });
-    }
+    const result = await pool.query(
+      `UPDATE komentar
+       SET komentar = $1
+       WHERE id = $2
+       RETURNING *`,
+      [isiKomentar, komentarId]
+    );
 
     return res.status(200).json({
       success: true,
       message: 'Komentar berhasil diedit',
-      data
+      data: result.rows[0],
     });
   } catch (error) {
     return res.status(500).json({
       success: false,
       message: 'Terjadi kesalahan pada server',
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -231,52 +190,43 @@ const hapusKomentar = async (req, res) => {
     if (!Number.isInteger(komentarId)) {
       return res.status(400).json({
         success: false,
-        message: 'id komentar harus berupa angka'
+        message: 'id komentar harus berupa angka',
       });
     }
 
-    const { data: dataKomentar, error: findError } = await supabase
-      .from(TABLE_KOMENTAR)
-      .select('*')
-      .eq('id', komentarId)
-      .single();
+    const cekKomentar = await pool.query(
+      `SELECT * FROM komentar WHERE id = $1`,
+      [komentarId]
+    );
 
-    if (findError || !dataKomentar) {
+    if (cekKomentar.rows.length === 0) {
       return res.status(404).json({
         success: false,
-        message: 'Komentar tidak ditemukan'
+        message: 'Komentar tidak ditemukan',
       });
     }
 
-    if (Number(dataKomentar.user_id) !== userId) {
+    if (Number(cekKomentar.rows[0].user_id) !== userId) {
       return res.status(403).json({
         success: false,
-        message: 'Tidak memiliki izin untuk menghapus komentar ini'
+        message: 'Tidak memiliki izin untuk menghapus komentar ini',
       });
     }
 
-    const { error } = await supabase
-      .from(TABLE_KOMENTAR)
-      .delete()
-      .eq('id', komentarId);
-
-    if (error) {
-      return res.status(500).json({
-        success: false,
-        message: 'Gagal menghapus komentar',
-        error: error.message
-      });
-    }
+    await pool.query(
+      `DELETE FROM komentar WHERE id = $1`,
+      [komentarId]
+    );
 
     return res.status(200).json({
       success: true,
-      message: 'Komentar berhasil dihapus'
+      message: 'Komentar berhasil dihapus',
     });
   } catch (error) {
     return res.status(500).json({
       success: false,
       message: 'Terjadi kesalahan pada server',
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -286,5 +236,5 @@ module.exports = {
   getSemuaKomentar,
   getKomentarByLaporan,
   updateKomentar,
-  hapusKomentar
+  hapusKomentar,
 };
