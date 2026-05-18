@@ -130,6 +130,13 @@ const updateKomentar = async (req, res) => {
       });
     }
 
+    if (!Number.isInteger(userId)) {
+      return res.status(401).json({
+        success: false,
+        message: 'User belum terautentikasi atau user_id tidak valid',
+      });
+    }
+
     if (!isiKomentar) {
       return res.status(400).json({
         success: false,
@@ -158,7 +165,8 @@ const updateKomentar = async (req, res) => {
 
     const result = await pool.query(
       `UPDATE komentar
-       SET komentar = $1
+       SET komentar = $1,
+           updated_at = NOW()
        WHERE id = $2
        RETURNING *`,
       [isiKomentar, komentarId]
