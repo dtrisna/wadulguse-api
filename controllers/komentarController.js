@@ -164,14 +164,13 @@ const updateKomentar = async (req, res) => {
     }
 
     const result = await pool.query(
-      `UPDATE komentar
-       SET komentar = $1,
-           updated_at = NOW()
-       WHERE id = $2
-       RETURNING *`,
-      [isiKomentar, komentarId]
-    );
-
+  `UPDATE komentar
+   SET komentar = $1,
+       updated = NOW()
+   WHERE id = $2
+   RETURNING *`,
+  [isiKomentar, komentarId]
+);
     return res.status(200).json({
       success: true,
       message: 'Komentar berhasil diedit',
