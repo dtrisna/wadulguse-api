@@ -3,30 +3,14 @@ const express = require("express");
 const {
   createLaporan,
   getAllLaporan,
+  getLaporanPublic,
+  getLaporanByUser,
+  getRiwayatLaporanSelesaiByUser,
   getDetailLaporan,
   updateStatusLaporan
 } = require("../controllers/laporanController");
 
 const router = express.Router();
-
-/**
- * @swagger
- * tags:
- *   name: Laporan
- *   description: API untuk mengelola laporan masyarakat
- */
-
-/**
- * @swagger
- * /api/laporan:
- *   get:
- *     summary: Menampilkan semua laporan
- *     tags: [Laporan]
- *     responses:
- *       200:
- *         description: Data laporan berhasil diambil
- */
-router.get("/", getAllLaporan);
 
 /**
  * @swagger
@@ -78,6 +62,38 @@ router.post("/", createLaporan);
 
 /**
  * @swagger
+ * tags:
+ *   name: Laporan
+ *   description: API untuk mengelola laporan masyarakat
+ */
+
+/**
+ * @swagger
+ * /api/laporan:
+ *   get:
+ *     summary: Menampilkan semua laporan
+ *     tags: [Laporan]
+ *     responses:
+ *       200:
+ *         description: Data laporan berhasil diambil
+ */
+router.get("/", getAllLaporan);
+
+/**
+ * @swagger
+ * /api/laporan/public:
+ *   get:
+ *     summary: Menampilkan laporan publik
+ *     description: Endpoint ini hanya menampilkan laporan dengan jenis_laporan public.
+ *     tags: [Laporan]
+ *     responses:
+ *       200:
+ *         description: Data laporan publik berhasil diambil
+ */
+router.get("/public", getLaporanPublic);
+
+/**
+ * @swagger
  * /api/laporan/{id}:
  *   get:
  *     summary: Menampilkan detail laporan
@@ -96,6 +112,46 @@ router.post("/", createLaporan);
  *         description: Laporan tidak ditemukan
  */
 router.get("/:id", getDetailLaporan);
+
+/**
+ * @swagger
+ * /api/laporan/user/{user_id}:
+ *   get:
+ *     summary: Menampilkan laporan berdasarkan user
+ *     description: Endpoint ini menampilkan semua laporan milik user tertentu.
+ *     tags: [Laporan]
+ *     parameters:
+ *       - in: path
+ *         name: user_id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         example: 1
+ *     responses:
+ *       200:
+ *         description: Data laporan user berhasil diambil
+ */
+router.get("/user/:user_id", getLaporanByUser);
+
+/**
+ * @swagger
+ * /api/laporan/user/{user_id}/selesai:
+ *   get:
+ *     summary: Menampilkan riwayat laporan selesai berdasarkan user
+ *     description: Endpoint ini menampilkan laporan milik user tertentu dengan status laporan_selesai_ditindaklanjuti.
+ *     tags: [Laporan]
+ *     parameters:
+ *       - in: path
+ *         name: user_id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         example: 1
+*     responses:
+*         200:
+*           description: Riwayat laporan selesai berhasil diambil
+*/
+router.get("/user/:user_id/selesai", getRiwayatLaporanSelesaiByUser);
 
 /**
  * @swagger

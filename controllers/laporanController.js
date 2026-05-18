@@ -214,9 +214,95 @@ async function updateStatusLaporan(req, res) {
   }
 }
 
+async function getLaporanPublic(req, res) {
+  try {
+    const result = await pool.query(
+      `SELECT 
+        laporan.*,
+        users.nama AS nama_pelapor,
+        users.email AS email_pelapor
+      FROM laporan
+      JOIN users ON laporan.user_id = users.id
+      WHERE laporan.jenis_laporan = 'public'
+      ORDER BY laporan.created_at DESC`
+    );
+
+    res.json({
+      message: "Data laporan publik berhasil diambil",
+      data: result.rows
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Gagal mengambil laporan publik",
+      error: error.message
+    });
+  }
+}
+
+async function getLaporanByUser(req, res) {
+  try {
+    const { user_id } = req.params;
+
+    const result = await pool.query(
+      `SELECT 
+        laporan.*,
+        users.nama AS nama_pelapor,
+        users.email AS email_pelapor
+      FROM laporan
+      JOIN users ON laporan.user_id = users.id
+      WHERE laporan.user_id = $1
+      ORDER BY laporan.created_at DESC`,
+      [user_id]
+    );
+
+    res.json({
+      message: "Data laporan user berhasil diambil",
+      data: result.rows
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Gagal mengambil laporan user",
+      error: error.message
+    });
+  }
+}
+
+async function getRiwayatLaporanSelesaiByUser(req, res) {
+  try {
+    const { user_id } = req.params;
+
+    const result = await pool.query(
+      `SELECT 
+        laporan.*,
+        users.nama AS nama_pelapor,
+        users.email AS email_pelapor
+      FROM laporan
+      JOIN users ON laporan.user_id = users.id
+      WHERE laporan.user_id = $1
+      AND laporan.status = 'laporan_selesai_ditindaklanjuti'
+      ORDER BY laporan.updated_at DESC`,
+      [user_id]
+    );
+
+    res.json({
+      message: "Riwayat laporan selesai berhasil diambil",
+      data: result.rows
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Gagal mengambil riwayat laporan selesai",
+      error: error.message
+    });
+  }
+}
+
+
 module.exports = {
   createLaporan,
   getAllLaporan,
+  getLaporanPublic,
+  getLaporanByUser,
+  getRiwayatLaporanSelesaiByUser,
   getDetailLaporan,
   updateStatusLaporan
 };
