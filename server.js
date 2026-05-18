@@ -21,19 +21,55 @@ app.use("/api/laporan", laporanRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/notifikasi", notifikasiRoutes);
 
-// Swagger
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.get('/api-docs.json', (req, res) => {
+  res.json(swaggerSpec);
+});
 
-// Test route
+app.get(['/api-docs', '/api-docs/'], (req, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>API WadulGuse Docs</title>
+        <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist/swagger-ui.css" />
+      </head>
+      <body>
+        <div id="swagger-ui"></div>
+
+        <script src="https://unpkg.com/swagger-ui-dist/swagger-ui-bundle.js"></script>
+        <script src="https://unpkg.com/swagger-ui-dist/swagger-ui-standalone-preset.js"></script>
+        <script>
+          window.onload = function() {
+            SwaggerUIBundle({
+              url: '/api-docs.json',
+              dom_id: '#swagger-ui',
+              presets: [
+                SwaggerUIBundle.presets.apis,
+                SwaggerUIStandalonePreset
+              ],
+              layout: 'StandaloneLayout',
+              persistAuthorization: true
+            });
+          };
+        </script>
+      </body>
+    </html>
+  `);
+});
+
 app.get('/', (req, res) => {
   res.json({
     message: 'API WadulGuse berhasil berjalan',
   });
 });
 
-const PORT = process.env.PORT || 3000;
+module.exports = app;
 
-app.listen(PORT, () => {
-  console.log(`Server berjalan di http://localhost:${PORT}`);
-  console.log(`Swagger berjalan di http://localhost:${PORT}/api-docs`);
-});
+if (require.main === module) {
+  const PORT = process.env.PORT || 3000;
+
+  app.listen(PORT, () => {
+    console.log(`Server berjalan di http://localhost:${PORT}`);
+    console.log(`Swagger berjalan di http://localhost:${PORT}/api-docs`);
+  });
+}
