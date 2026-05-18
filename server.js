@@ -15,7 +15,20 @@ app.use('/uploads', express.static('uploads'));
 app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
 
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.get('/api-docs.json', (req, res) => {
+  res.json(swaggerSpec);
+});
+
+app.use(
+  '/api-docs',
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec, {
+    customSiteTitle: 'API WadulGuse Docs',
+    swaggerOptions: {
+      persistAuthorization: true,
+    },
+  })
+);
 
 app.get('/', (req, res) => {
   res.json({
