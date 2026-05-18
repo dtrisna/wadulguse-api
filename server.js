@@ -20,7 +20,7 @@ app.get('/api-docs.json', (req, res) => {
 });
 
 app.use(
-  '/api-docs',
+  '/api-docs/',
   swaggerUi.serve,
   swaggerUi.setup(swaggerSpec, {
     customSiteTitle: 'API WadulGuse Docs',
