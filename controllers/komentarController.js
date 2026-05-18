@@ -1,4 +1,5 @@
-const supabase = require('../config/db');
+const supabaseModule = require('../config/db');
+const supabase = supabaseModule.supabase || supabaseModule;
 
 const TABLE_KOMENTAR = 'komentar';
 
