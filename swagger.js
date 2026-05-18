@@ -9,10 +9,10 @@ const swaggerOptions = {
       description: 'Dokumentasi API untuk aplikasi pengaduan masyarakat WadulGuse',
     },
     servers: [
-      {
-        url: 'http://localhost:3000',
-        description: 'Local server',
-      },
+    {
+        url: process.env.SERVER_URL || 'http://localhost:3000',
+        description: 'API Server',
+    },
     ],
     components: {
       securitySchemes: {
