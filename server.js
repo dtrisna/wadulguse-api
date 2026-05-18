@@ -9,6 +9,7 @@ const adminRoutes = require('./routes/adminRoutes');
 const notifikasiRoutes = require('./routes/notifikasiRoutes');
 const komentarRoutes = require('./routes/komentarRoutes');
 const reactionRoutes = require('./routes/reactionRoutes');
+const userRoutes = require('./routes/userRoutes');
 require('dotenv').config();
 
 const app = express();
@@ -19,6 +20,7 @@ app.use('/uploads', express.static('uploads'));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
+app.use('/api/users', userRoutes);
 app.use('/api/laporan', laporanRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/notifikasi', notifikasiRoutes);
