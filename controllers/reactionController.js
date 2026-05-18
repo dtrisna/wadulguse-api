@@ -1,10 +1,10 @@
-const supabaseModule = require('../config/db');
-const supabase = supabaseModule.supabase || supabaseModule;
+const db = require('../config/db');
+const pool = db.pool || db;
 
-const TABLE_REACTION = 'laporan_reactions';
+const TABLE_REACTION = 'reactions';
 
 const getUserId = (req) => {
-  return req.user?.id || req.user?.user_id || req.user?.sub || req.userId;
+  return req.user?.id || req.user?.user_id || req.user?.id_user || req.user?.sub || req.userId;
 };
 
 const setReaction = async (req, res, type) => {
@@ -12,48 +12,38 @@ const setReaction = async (req, res, type) => {
     const { laporan_id } = req.params;
     const user_id = getUserId(req);
 
-    if (!laporan_id) {
+    const laporanId = Number(laporan_id);
+    const userId = Number(user_id);
+
+    if (!Number.isInteger(laporanId)) {
       return res.status(400).json({
         success: false,
-        message: 'laporan_id wajib diisi'
+        message: 'laporan_id harus berupa angka'
       });
     }
 
-    if (!user_id) {
+    if (!Number.isInteger(userId)) {
       return res.status(401).json({
         success: false,
-        message: 'User belum terautentikasi'
+        message: 'User belum terautentikasi atau user_id tidak valid'
       });
     }
 
-    const { data: existingReaction, error: findError } = await supabase
-      .from(TABLE_REACTION)
-      .select('*')
-      .eq('laporan_id', String(laporan_id))
-      .eq('user_id', String(user_id))
-      .maybeSingle();
+    const existingResult = await pool.query(
+      `SELECT * FROM ${TABLE_REACTION}
+       WHERE laporan_id = $1 AND user_id = $2
+       LIMIT 1`,
+      [laporanId, userId]
+    );
 
-    if (findError) {
-      return res.status(500).json({
-        success: false,
-        message: 'Gagal mengecek data reaction',
-        error: findError.message
-      });
-    }
+    const existingReaction = existingResult.rows[0];
 
     if (existingReaction && existingReaction.type === type) {
-      const { error: deleteError } = await supabase
-        .from(TABLE_REACTION)
-        .delete()
-        .eq('id', existingReaction.id);
-
-      if (deleteError) {
-        return res.status(500).json({
-          success: false,
-          message: 'Gagal membatalkan reaction',
-          error: deleteError.message
-        });
-      }
+      await pool.query(
+        `DELETE FROM ${TABLE_REACTION}
+         WHERE id = $1`,
+        [existingReaction.id]
+      );
 
       return res.status(200).json({
         success: true,
@@ -62,52 +52,33 @@ const setReaction = async (req, res, type) => {
     }
 
     if (existingReaction && existingReaction.type !== type) {
-      const { data, error: updateError } = await supabase
-        .from(TABLE_REACTION)
-        .update({ type })
-        .eq('id', existingReaction.id)
-        .select()
-        .single();
-
-      if (updateError) {
-        return res.status(500).json({
-          success: false,
-          message: 'Gagal mengubah reaction',
-          error: updateError.message
-        });
-      }
+      const updateResult = await pool.query(
+        `UPDATE ${TABLE_REACTION}
+         SET type = $1
+         WHERE id = $2
+         RETURNING *`,
+        [type, existingReaction.id]
+      );
 
       return res.status(200).json({
         success: true,
         message: `Reaction berhasil diubah menjadi ${type}`,
-        data
+        data: updateResult.rows[0]
       });
     }
 
-    const { data, error: insertError } = await supabase
-      .from(TABLE_REACTION)
-      .insert([
-        {
-          laporan_id: String(laporan_id),
-          user_id: String(user_id),
-          type
-        }
-      ])
-      .select()
-      .single();
-
-    if (insertError) {
-      return res.status(500).json({
-        success: false,
-        message: 'Gagal menambahkan reaction',
-        error: insertError.message
-      });
-    }
+    const insertResult = await pool.query(
+      `INSERT INTO ${TABLE_REACTION}
+       (laporan_id, user_id, type)
+       VALUES ($1, $2, $3)
+       RETURNING *`,
+      [laporanId, userId, type]
+    );
 
     return res.status(201).json({
       success: true,
       message: `${type} berhasil ditambahkan`,
-      data
+      data: insertResult.rows[0]
     });
   } catch (error) {
     return res.status(500).json({
@@ -129,31 +100,35 @@ const dislikeLaporan = async (req, res) => {
 const getReactionByLaporan = async (req, res) => {
   try {
     const { laporan_id } = req.params;
+    const laporanId = Number(laporan_id);
 
-    const { data, error } = await supabase
-      .from(TABLE_REACTION)
-      .select('*')
-      .eq('laporan_id', String(laporan_id));
-
-    if (error) {
-      return res.status(500).json({
+    if (!Number.isInteger(laporanId)) {
+      return res.status(400).json({
         success: false,
-        message: 'Gagal mengambil data reaction',
-        error: error.message
+        message: 'laporan_id harus berupa angka'
       });
     }
 
-    const total_like = data.filter((item) => item.type === 'like').length;
-    const total_dislike = data.filter((item) => item.type === 'dislike').length;
+    const result = await pool.query(
+      `SELECT * FROM ${TABLE_REACTION}
+       WHERE laporan_id = $1
+       ORDER BY created_at DESC`,
+      [laporanId]
+    );
+
+    const reactions = result.rows;
+
+    const total_like = reactions.filter((item) => item.type === 'like').length;
+    const total_dislike = reactions.filter((item) => item.type === 'dislike').length;
 
     return res.status(200).json({
       success: true,
       message: 'Data reaction berhasil diambil',
       data: {
-        laporan_id: String(laporan_id),
+        laporan_id: laporanId,
         total_like,
         total_dislike,
-        reactions: data
+        reactions
       }
     });
   } catch (error) {
@@ -170,24 +145,34 @@ const hapusReaction = async (req, res) => {
     const { laporan_id } = req.params;
     const user_id = getUserId(req);
 
-    if (!user_id) {
-      return res.status(401).json({
+    const laporanId = Number(laporan_id);
+    const userId = Number(user_id);
+
+    if (!Number.isInteger(laporanId)) {
+      return res.status(400).json({
         success: false,
-        message: 'User belum terautentikasi'
+        message: 'laporan_id harus berupa angka'
       });
     }
 
-    const { error } = await supabase
-      .from(TABLE_REACTION)
-      .delete()
-      .eq('laporan_id', String(laporan_id))
-      .eq('user_id', String(user_id));
-
-    if (error) {
-      return res.status(500).json({
+    if (!Number.isInteger(userId)) {
+      return res.status(401).json({
         success: false,
-        message: 'Gagal menghapus reaction',
-        error: error.message
+        message: 'User belum terautentikasi atau user_id tidak valid'
+      });
+    }
+
+    const deleteResult = await pool.query(
+      `DELETE FROM ${TABLE_REACTION}
+       WHERE laporan_id = $1 AND user_id = $2
+       RETURNING *`,
+      [laporanId, userId]
+    );
+
+    if (deleteResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Reaction tidak ditemukan'
       });
     }
 
