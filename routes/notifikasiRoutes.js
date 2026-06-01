@@ -67,7 +67,7 @@ router.post("/send", async (req, res) => {
 
     const userResult = await pool.query(
       `
-      SELECT id, username, email, fcm_token
+      SELECT id, nama, email, fcm_token
       FROM users
       WHERE id = $1
       `,
