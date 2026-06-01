@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 const authMiddleware = require('../middleware/authMiddleware');
+const pool = require('../config/db');
 
 const {
   getAllUsers,
@@ -33,29 +34,6 @@ const {
  *         description: Token tidak valid
  */
 router.get('/', authMiddleware, getAllUsers);
-
-/**
- * @swagger
- * /api/users/{id}:
- *   get:
- *     summary: Melihat detail user berdasarkan ID
- *     tags: [User]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *         description: ID user
- *     responses:
- *       200:
- *         description: Detail user berhasil diambil
- *       404:
- *         description: User tidak ditemukan
- */
-router.get('/:id', authMiddleware, getUserById);
 
 /**
  * @swagger
@@ -104,6 +82,105 @@ router.post('/', authMiddleware, createUser);
 
 /**
  * @swagger
+ * /api/users/fcm-token:
+ *   put:
+ *     summary: Menyimpan FCM token user dari Firebase
+ *     tags: [User]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - fcm_token
+ *             properties:
+ *               firebase_uid:
+ *                 type: string
+ *                 example: firebase_uid_user
+ *               email:
+ *                 type: string
+ *                 example: user@gmail.com
+ *               fcm_token:
+ *                 type: string
+ *                 example: fcm_token_device
+ *     responses:
+ *       200:
+ *         description: FCM token berhasil disimpan
+ *       400:
+ *         description: email dan fcm_token wajib diisi
+ *       404:
+ *         description: User tidak ditemukan
+ */
+router.put('/fcm-token', async (req, res) => {
+  try {
+    const { firebase_uid, email, fcm_token } = req.body;
+
+    if (!email || !fcm_token) {
+      return res.status(400).json({
+        success: false,
+        message: 'email dan fcm_token wajib diisi',
+      });
+    }
+
+    const result = await pool.query(
+      `
+      UPDATE users
+      SET firebase_uid = $1,
+          fcm_token = $2
+      WHERE email = $3
+      RETURNING id, nama, email, firebase_uid, fcm_token
+      `,
+      [firebase_uid || null, fcm_token, email]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'User dengan email tersebut tidak ditemukan di database',
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'FCM token berhasil disimpan',
+      data: result.rows[0],
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Gagal menyimpan FCM token',
+      error: error.message,
+    });
+  }
+});
+
+/**
+ * @swagger
+ * /api/users/{id}:
+ *   get:
+ *     summary: Melihat detail user berdasarkan ID
+ *     tags: [User]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID user
+ *     responses:
+ *       200:
+ *         description: Detail user berhasil diambil
+ *       404:
+ *         description: User tidak ditemukan
+ */
+router.get('/:id', authMiddleware, getUserById);
+
+/**
+ * @swagger
  * /api/users/{id}:
  *   put:
  *     summary: Mengubah data user berdasarkan ID
@@ -149,49 +226,6 @@ router.post('/', authMiddleware, createUser);
  *         description: User tidak ditemukan
  */
 router.put('/:id', authMiddleware, updateUser);
-
-router.put("/fcm-token", async (req, res) => {
-  try {
-    const { firebase_uid, email, fcm_token } = req.body;
-
-    if (!email || !fcm_token) {
-      return res.status(400).json({
-        success: false,
-        message: "email dan fcm_token wajib diisi",
-      });
-    }
-
-    const result = await pool.query(
-      `
-      update users
-      set firebase_uid = $1,
-          fcm_token = $2
-      where email = $3
-      returning id, username, email, firebase_uid, fcm_token
-      `,
-      [firebase_uid, fcm_token, email]
-    );
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "User dengan email tersebut tidak ditemukan di database",
-      });
-    }
-
-    return res.status(200).json({
-      success: true,
-      message: "FCM token berhasil disimpan",
-      data: result.rows[0],
-    });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: "Gagal menyimpan FCM token",
-      error: error.message,
-    });
-  }
-});
 
 /**
  * @swagger
