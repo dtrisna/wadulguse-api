@@ -150,6 +150,49 @@ router.post('/', authMiddleware, createUser);
  */
 router.put('/:id', authMiddleware, updateUser);
 
+router.put("/fcm-token", async (req, res) => {
+  try {
+    const { firebase_uid, email, fcm_token } = req.body;
+
+    if (!email || !fcm_token) {
+      return res.status(400).json({
+        success: false,
+        message: "email dan fcm_token wajib diisi",
+      });
+    }
+
+    const result = await pool.query(
+      `
+      update users
+      set firebase_uid = $1,
+          fcm_token = $2
+      where email = $3
+      returning id, username, email, firebase_uid, fcm_token
+      `,
+      [firebase_uid, fcm_token, email]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "User dengan email tersebut tidak ditemukan di database",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "FCM token berhasil disimpan",
+      data: result.rows[0],
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Gagal menyimpan FCM token",
+      error: error.message,
+    });
+  }
+});
+
 /**
  * @swagger
  * /api/users/{id}:
