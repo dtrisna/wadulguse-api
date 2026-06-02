@@ -92,10 +92,21 @@ router.post("/send", async (req, res) => {
 
     const fcmMessage = {
       token: targetUser.fcm_token,
+
       notification: {
         title: judul || "Notifikasi Baru",
         body: pesan,
       },
+
+      android: {
+        priority: "high",
+        notification: {
+          channelId: "high_importance_channel",
+          sound: "default",
+          priority: "high",
+        },
+      },
+
       data: {
         user_id: String(target_user_id),
         laporan_id: laporan_id ? String(laporan_id) : "",
