@@ -1,5 +1,5 @@
 const express = require("express");
-const upload = require("../middlewares/middlewareUpload");
+const upload = require("../middleware/uploadMiddleware");
 
 const {
   createLaporan,
