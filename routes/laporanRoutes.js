@@ -67,7 +67,18 @@ const router = express.Router();
  *       201:
  *         description: Laporan berhasil dibuat
  */
-router.post("/", upload.single("media"), createLaporan);
+router.post("/", (req, res, next) => {
+  upload.single("media")(req, res, function (err) {
+    if (err) {
+      return res.status(400).json({
+        message: "Gagal upload file laporan",
+        error: err.message,
+      });
+    }
+
+    next();
+  });
+}, createLaporan);
 
 /**
  * @swagger
