@@ -1,4 +1,5 @@
 const express = require("express");
+const upload = require("../middlewares/middlewareUpload");
 
 const {
   createLaporan,
@@ -14,6 +15,13 @@ const router = express.Router();
 
 /**
  * @swagger
+ * tags:
+ *   name: Laporan
+ *   description: API untuk mengelola laporan masyarakat
+ */
+
+/**
+ * @swagger
  * /api/laporan:
  *   post:
  *     summary: Membuat laporan baru
@@ -21,7 +29,7 @@ const router = express.Router();
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             required:
@@ -41,7 +49,8 @@ const router = express.Router();
  *                 example: Terdapat jalan berlubang cukup besar dan membahayakan pengendara.
  *               media:
  *                 type: string
- *                 example: https://example.com/jalan-rusak.jpg
+ *                 format: binary
+ *                 description: Foto laporan
  *               latitude:
  *                 type: number
  *                 example: -8.172357
@@ -58,14 +67,7 @@ const router = express.Router();
  *       201:
  *         description: Laporan berhasil dibuat
  */
-router.post("/", createLaporan);
-
-/**
- * @swagger
- * tags:
- *   name: Laporan
- *   description: API untuk mengelola laporan masyarakat
- */
+router.post("/", upload.single("media"), createLaporan);
 
 /**
  * @swagger
@@ -91,27 +93,6 @@ router.get("/", getAllLaporan);
  *         description: Data laporan publik berhasil diambil
  */
 router.get("/public", getLaporanPublic);
-
-/**
- * @swagger
- * /api/laporan/{id}:
- *   get:
- *     summary: Menampilkan detail laporan
- *     tags: [Laporan]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *         example: 1
- *     responses:
- *       200:
- *         description: Detail laporan berhasil diambil
- *       404:
- *         description: Laporan tidak ditemukan
- */
-router.get("/:id", getDetailLaporan);
 
 /**
  * @swagger
@@ -147,10 +128,10 @@ router.get("/user/:user_id", getLaporanByUser);
  *         schema:
  *           type: integer
  *         example: 1
-*     responses:
-*         200:
-*           description: Riwayat laporan selesai berhasil diambil
-*/
+ *     responses:
+ *       200:
+ *         description: Riwayat laporan selesai berhasil diambil
+ */
 router.get("/user/:user_id/selesai", getRiwayatLaporanSelesaiByUser);
 
 /**
@@ -188,5 +169,26 @@ router.get("/user/:user_id/selesai", getRiwayatLaporanSelesaiByUser);
  *         description: Laporan tidak ditemukan
  */
 router.put("/:id/status", updateStatusLaporan);
+
+/**
+ * @swagger
+ * /api/laporan/{id}:
+ *   get:
+ *     summary: Menampilkan detail laporan
+ *     tags: [Laporan]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         example: 1
+ *     responses:
+ *       200:
+ *         description: Detail laporan berhasil diambil
+ *       404:
+ *         description: Laporan tidak ditemukan
+ */
+router.get("/:id", getDetailLaporan);
 
 module.exports = router;

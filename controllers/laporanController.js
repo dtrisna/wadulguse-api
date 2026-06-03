@@ -1,4 +1,5 @@
 const pool = require("../config/db");
+const uploadToCloudinary = require("../utils/uploadToCloudinary");
 
 async function createLaporan(req, res) {
   try {
@@ -6,7 +7,6 @@ async function createLaporan(req, res) {
       user_id,
       judul,
       deskripsi,
-      media,
       latitude,
       longitude,
       alamat,
@@ -23,6 +23,17 @@ async function createLaporan(req, res) {
       return res.status(400).json({
         message: "jenis_laporan harus public atau private"
       });
+    }
+
+    let mediaUrl = null;
+
+    if (req.file) {
+      const uploadResult = await uploadToCloudinary(
+        req.file.buffer,
+        "wadulguse/laporan"
+      );
+
+      mediaUrl = uploadResult.secure_url;
     }
 
     const result = await pool.query(
@@ -50,7 +61,7 @@ async function createLaporan(req, res) {
         user_id,
         judul,
         deskripsi,
-        media || null,
+        mediaUrl,
         latitude || null,
         longitude || null,
         alamat || null,
@@ -295,7 +306,6 @@ async function getRiwayatLaporanSelesaiByUser(req, res) {
     });
   }
 }
-
 
 module.exports = {
   createLaporan,
