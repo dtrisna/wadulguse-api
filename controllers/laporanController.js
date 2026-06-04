@@ -231,7 +231,8 @@ async function getLaporanPublic(req, res) {
       `SELECT 
         laporan.*,
         users.nama AS nama_pelapor,
-        users.email AS email_pelapor
+        users.email AS email_pelapor,
+        users.foto_profile AS foto_pelapor
       FROM laporan
       JOIN users ON laporan.user_id = users.id
       WHERE laporan.jenis_laporan = 'public'
