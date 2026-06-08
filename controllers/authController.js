@@ -102,6 +102,12 @@ const login = async (req, res) => {
   }
 };
 
+const logout = async (req, res) => {
+  return res.json({
+    message: 'Logout berhasil',
+  });
+};
+
 module.exports = {
   register,
   login,
