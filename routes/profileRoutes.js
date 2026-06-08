@@ -1,11 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../middleware/authMiddleware');
+const upload = require('../middleware/uploadMiddleware');
 
 const {
   getProfile,
   updateProfile,
   deleteProfile,
+  updateFotoProfile,
 } = require('../controllers/profileController');
 
 /**
@@ -78,5 +80,40 @@ router.put('/', authMiddleware, updateProfile);
  *         description: Token tidak valid
  */
 router.delete('/', authMiddleware, deleteProfile);
+
+/**
+ * @swagger
+ * /api/profile/photo:
+ *   put:
+ *     summary: Upload foto profile user
+ *     tags: [Profile]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - foto_profile
+ *             properties:
+ *               foto_profile:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       200:
+ *         description: Foto profile berhasil diperbarui
+ *       400:
+ *         description: File foto profile wajib diupload
+ *       401:
+ *         description: Token tidak valid
+ */
+router.put(
+  '/photo',
+  authMiddleware,
+  upload.single('foto_profile'),
+  updateFotoProfile
+);
 
 module.exports = router;

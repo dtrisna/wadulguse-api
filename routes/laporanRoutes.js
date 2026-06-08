@@ -1,4 +1,5 @@
 const express = require("express");
+const upload = require("../middleware/uploadMiddleware");
 
 const {
   createLaporan,
@@ -22,6 +23,13 @@ const router = express.Router();
 
 /**
  * @swagger
+ * tags:
+ *   name: Laporan
+ *   description: API untuk mengelola laporan masyarakat
+ */
+
+/**
+ * @swagger
  * /api/laporan:
  *   post:
  *     summary: Membuat laporan baru
@@ -29,7 +37,7 @@ const router = express.Router();
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             required:
@@ -49,7 +57,8 @@ const router = express.Router();
  *                 example: Terdapat jalan berlubang cukup besar dan membahayakan pengendara.
  *               media:
  *                 type: string
- *                 example: https://example.com/jalan-rusak.jpg
+ *                 format: binary
+ *                 description: Foto laporan
  *               latitude:
  *                 type: number
  *                 example: -8.172357
@@ -66,7 +75,18 @@ const router = express.Router();
  *       201:
  *         description: Laporan berhasil dibuat
  */
-router.post("/", createLaporan);
+router.post("/", (req, res, next) => {
+  upload.single("media")(req, res, function (err) {
+    if (err) {
+      return res.status(400).json({
+        message: "Gagal upload file laporan",
+        error: err.message,
+      });
+    }
+
+    next();
+  });
+}, createLaporan);
 
 /**
  * @swagger
@@ -249,5 +269,26 @@ router.put("/:id", updateLaporan);
  *         description: Laporan tidak ditemukan
  */
 router.put("/:id/status", updateStatusLaporan);
+
+/**
+ * @swagger
+ * /api/laporan/{id}:
+ *   get:
+ *     summary: Menampilkan detail laporan
+ *     tags: [Laporan]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         example: 1
+ *     responses:
+ *       200:
+ *         description: Detail laporan berhasil diambil
+ *       404:
+ *         description: Laporan tidak ditemukan
+ */
+router.get("/:id", getDetailLaporan);
 
 module.exports = router;
