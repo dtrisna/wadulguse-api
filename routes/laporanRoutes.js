@@ -7,10 +7,18 @@ const {
   getLaporanByUser,
   getRiwayatLaporanSelesaiByUser,
   getDetailLaporan,
-  updateStatusLaporan
+  updateStatusLaporan,
+  updateLaporan,
 } = require("../controllers/laporanController");
 
 const router = express.Router();
+
+/**
+ * @swagger
+ * tags:
+ *   name: Laporan
+ *   description: API untuk mengelola laporan masyarakat
+ */
 
 /**
  * @swagger
@@ -62,13 +70,6 @@ router.post("/", createLaporan);
 
 /**
  * @swagger
- * tags:
- *   name: Laporan
- *   description: API untuk mengelola laporan masyarakat
- */
-
-/**
- * @swagger
  * /api/laporan:
  *   get:
  *     summary: Menampilkan semua laporan
@@ -91,27 +92,6 @@ router.get("/", getAllLaporan);
  *         description: Data laporan publik berhasil diambil
  */
 router.get("/public", getLaporanPublic);
-
-/**
- * @swagger
- * /api/laporan/{id}:
- *   get:
- *     summary: Menampilkan detail laporan
- *     tags: [Laporan]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *         example: 1
- *     responses:
- *       200:
- *         description: Detail laporan berhasil diambil
- *       404:
- *         description: Laporan tidak ditemukan
- */
-router.get("/:id", getDetailLaporan);
 
 /**
  * @swagger
@@ -147,11 +127,92 @@ router.get("/user/:user_id", getLaporanByUser);
  *         schema:
  *           type: integer
  *         example: 1
-*     responses:
-*         200:
-*           description: Riwayat laporan selesai berhasil diambil
-*/
+ *     responses:
+ *       200:
+ *         description: Riwayat laporan selesai berhasil diambil
+ */
 router.get("/user/:user_id/selesai", getRiwayatLaporanSelesaiByUser);
+
+/**
+ * @swagger
+ * /api/laporan/{id}:
+ *   get:
+ *     summary: Menampilkan detail laporan
+ *     tags: [Laporan]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         example: 1
+ *     responses:
+ *       200:
+ *         description: Detail laporan berhasil diambil
+ *       404:
+ *         description: Laporan tidak ditemukan
+ */
+router.get("/:id", getDetailLaporan);
+
+/**
+ * @swagger
+ * /api/laporan/{id}:
+ *   put:
+ *     summary: Mengubah data laporan
+ *     description: Endpoint ini digunakan user untuk mengubah isi laporan selama laporan belum diproses atau selesai.
+ *     tags: [Laporan]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         example: 1
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - user_id
+ *               - judul
+ *               - deskripsi
+ *               - alamat
+ *               - jenis_laporan
+ *             properties:
+ *               user_id:
+ *                 type: integer
+ *                 example: 1
+ *               judul:
+ *                 type: string
+ *                 example: Jalan Rusak Parah
+ *               deskripsi:
+ *                 type: string
+ *                 example: Jalan berlubang semakin besar dan membahayakan pengguna jalan.
+ *               latitude:
+ *                 type: number
+ *                 example: -8.172357
+ *               longitude:
+ *                 type: number
+ *                 example: 113.700302
+ *               alamat:
+ *                 type: string
+ *                 example: Jl. Kalimantan, Sumbersari, Jember
+ *               jenis_laporan:
+ *                 type: string
+ *                 example: public
+ *     responses:
+ *       200:
+ *         description: Laporan berhasil diperbarui
+ *       400:
+ *         description: Data tidak lengkap
+ *       403:
+ *         description: Laporan tidak bisa diedit atau bukan milik user
+ *       404:
+ *         description: Laporan tidak ditemukan
+ */
+router.put("/:id", updateLaporan);
 
 /**
  * @swagger

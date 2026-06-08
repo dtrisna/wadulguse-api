@@ -296,6 +296,90 @@ async function getRiwayatLaporanSelesaiByUser(req, res) {
   }
 }
 
+const updateLaporan = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const {
+      judul,
+      deskripsi,
+      latitude,
+      longitude,
+      alamat,
+      jenis_laporan,
+      user_id,
+    } = req.body;
+
+    if (!judul || !deskripsi || !alamat || !jenis_laporan) {
+      return res.status(400).json({
+        message: "Judul, deskripsi, alamat, dan jenis laporan wajib diisi",
+      });
+    }
+
+    const checkLaporan = await pool.query(
+      "SELECT * FROM laporan WHERE id = $1",
+      [id]
+    );
+
+    if (checkLaporan.rows.length === 0) {
+      return res.status(404).json({
+        message: "Laporan tidak ditemukan",
+      });
+    }
+
+    const laporan = checkLaporan.rows[0];
+
+    if (
+      laporan.status === "dalam_proses_tindak_lanjut" ||
+      laporan.status === "laporan_selesai_ditindaklanjuti"
+    ) {
+      return res.status(403).json({
+        message:
+          "Laporan tidak bisa diedit karena sudah diproses atau sudah selesai",
+      });
+    }
+
+    if (user_id && laporan.user_id !== Number(user_id)) {
+      return res.status(403).json({
+        message: "Anda tidak memiliki akses untuk mengubah laporan ini",
+      });
+    }
+
+    const result = await pool.query(
+      `UPDATE laporan
+       SET judul = $1,
+           deskripsi = $2,
+           latitude = $3,
+           longitude = $4,
+           alamat = $5,
+           jenis_laporan = $6,
+           updated_at = NOW()
+       WHERE id = $7
+       RETURNING *`,
+      [
+        judul,
+        deskripsi,
+        latitude,
+        longitude,
+        alamat,
+        jenis_laporan,
+        id,
+      ]
+    );
+
+    return res.status(200).json({
+      message: "Laporan berhasil diperbarui",
+      data: result.rows[0],
+    });
+  } catch (error) {
+    console.error("Error update laporan:", error);
+    return res.status(500).json({
+      message: "Terjadi kesalahan server",
+      error: error.message,
+    });
+  }
+};
+
 
 module.exports = {
   createLaporan,
@@ -304,5 +388,6 @@ module.exports = {
   getLaporanByUser,
   getRiwayatLaporanSelesaiByUser,
   getDetailLaporan,
-  updateStatusLaporan
+  updateStatusLaporan,
+  updateLaporan,
 };
