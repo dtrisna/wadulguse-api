@@ -23,13 +23,6 @@ const router = express.Router();
 
 /**
  * @swagger
- * tags:
- *   name: Laporan
- *   description: API untuk mengelola laporan masyarakat
- */
-
-/**
- * @swagger
  * /api/laporan:
  *   post:
  *     summary: Membuat laporan baru
@@ -75,18 +68,22 @@ const router = express.Router();
  *       201:
  *         description: Laporan berhasil dibuat
  */
-router.post("/", (req, res, next) => {
-  upload.single("media")(req, res, function (err) {
-    if (err) {
-      return res.status(400).json({
-        message: "Gagal upload file laporan",
-        error: err.message,
-      });
-    }
+router.post(
+  "/",
+  (req, res, next) => {
+    upload.single("media")(req, res, function (err) {
+      if (err) {
+        return res.status(400).json({
+          message: "Gagal upload file laporan",
+          error: err.message,
+        });
+      }
 
-    next();
-  });
-}, createLaporan);
+      next();
+    });
+  },
+  createLaporan
+);
 
 /**
  * @swagger
@@ -269,26 +266,5 @@ router.put("/:id", updateLaporan);
  *         description: Laporan tidak ditemukan
  */
 router.put("/:id/status", updateStatusLaporan);
-
-/**
- * @swagger
- * /api/laporan/{id}:
- *   get:
- *     summary: Menampilkan detail laporan
- *     tags: [Laporan]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *         example: 1
- *     responses:
- *       200:
- *         description: Detail laporan berhasil diambil
- *       404:
- *         description: Laporan tidak ditemukan
- */
-router.get("/:id", getDetailLaporan);
 
 module.exports = router;
