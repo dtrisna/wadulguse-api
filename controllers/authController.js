@@ -90,6 +90,7 @@ const login = async (req, res) => {
     res.json({
       message: 'Login berhasil',
       token,
+      id: user.id,
       role: user.role,
       nama: user.nama,
     });
@@ -99,12 +100,6 @@ const login = async (req, res) => {
       error: error.message,
     });
   }
-};
-
-const logout = async (req, res) => {
-  res.json({
-    message: 'Logout berhasil',
-  });
 };
 
 module.exports = {
