@@ -56,7 +56,15 @@ const router = express.Router();
  */
 router.post("/send", async (req, res) => {
   try {
-    const { target_user_id, judul, pesan, laporan_id } = req.body;
+    const {
+      target_user_id,
+      judul,
+      pesan,
+      laporan_id,
+      type,
+      room_id,
+      sender_id,
+    } = req.body;
 
     if (!target_user_id || !pesan) {
       return res.status(400).json({
@@ -90,6 +98,16 @@ router.post("/send", async (req, res) => {
       });
     }
 
+    const notifType = type || (laporan_id ? "laporan" : "general");
+
+    const fcmData = {
+      type: String(notifType),
+      user_id: String(target_user_id),
+      laporan_id: laporan_id ? String(laporan_id) : "",
+      room_id: room_id ? String(room_id) : "",
+      sender_id: sender_id ? String(sender_id) : "",
+    };
+
     const fcmMessage = {
       token: targetUser.fcm_token,
 
@@ -101,16 +119,16 @@ router.post("/send", async (req, res) => {
       android: {
         priority: "high",
         notification: {
-          channelId: "high_importance_channel",
+          channelId:
+            notifType === "chat"
+              ? "chat_channel"
+              : "high_importance_channel",
           sound: "default",
           priority: "high",
         },
       },
 
-      data: {
-        user_id: String(target_user_id),
-        laporan_id: laporan_id ? String(laporan_id) : "",
-      },
+      data: fcmData,
     };
 
     const fcmResponse = await admin.messaging().send(fcmMessage);
