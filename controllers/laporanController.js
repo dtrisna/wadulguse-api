@@ -366,20 +366,10 @@ const updateLaporan = async (req, res) => {
     let mediaUrl = laporan.media;
 
     if (req.file) {
-      const uploadResult = await new Promise((resolve, reject) => {
-        const stream = cloudinary.uploader.upload_stream(
-          {
-            folder: "wadulguse/laporan",
-            resource_type: "image",
-          },
-          (error, result) => {
-            if (error) reject(error);
-            else resolve(result);
-          }
-        );
-
-        stream.end(req.file.buffer);
-      });
+      const uploadResult = await uploadToCloudinary(
+        req.file.buffer,
+        "wadulguse/laporan"
+      );
 
       mediaUrl = uploadResult.secure_url;
     }
