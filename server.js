@@ -11,6 +11,7 @@ const komentarRoutes = require('./routes/komentarRoutes');
 const reactionRoutes = require('./routes/reactionRoutes');
 const userRoutes = require('./routes/userRoutes');
 const deviceRoutes = require("./routes/deviceRoutes");
+const chatRoutes = require("./routes/chatRoutes");
 require('dotenv').config();
 
 const app = express();
@@ -28,6 +29,7 @@ app.use('/api/notifikasi', notifikasiRoutes);
 app.use('/api/komentar', komentarRoutes);
 app.use('/api/reactions', reactionRoutes);
 app.use("/api/devices", deviceRoutes);
+app.use("/api/chat", chatRoutes);
 
 app.get('/api-docs.json', (req, res) => {
   res.json(swaggerSpec);
