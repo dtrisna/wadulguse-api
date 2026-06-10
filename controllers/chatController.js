@@ -152,8 +152,43 @@ const getMessagesByRoom = async (req, res) => {
   }
 };
 
+const markMessagesAsRead = async (req, res) => {
+  try {
+    const { room_id } = req.params;
+    const { user_id } = req.body;
+
+    if (!room_id || !user_id) {
+      return res.status(400).json({
+        message: "room_id dan user_id wajib diisi",
+      });
+    }
+
+    const result = await pool.query(
+      `UPDATE chat_messages
+       SET is_read = true
+       WHERE room_id = $1
+       AND sender_id != $2
+       RETURNING *`,
+      [room_id, user_id]
+    );
+
+    return res.status(200).json({
+      message: "Pesan berhasil ditandai dibaca",
+      data: result.rows,
+    });
+  } catch (error) {
+    console.error("Error mark messages as read:", error);
+
+    return res.status(500).json({
+      message: "Terjadi kesalahan server saat menandai pesan dibaca",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   getOrCreateChatRoom,
   sendMessage,
   getMessagesByRoom,
+  markMessagesAsRead,
 };
