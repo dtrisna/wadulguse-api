@@ -186,9 +186,81 @@ const markMessagesAsRead = async (req, res) => {
   }
 };
 
+const getChatRoomsByUser = async (req, res) => {
+  try {
+    const { user_id } = req.params;
+
+    if (!user_id) {
+      return res.status(400).json({
+        message: "user_id wajib diisi",
+      });
+    }
+
+    const result = await pool.query(
+      `SELECT 
+          cr.id,
+          cr.user_id,
+          cr.admin_id,
+          cr.created_at,
+          cr.updated_at,
+
+          u.nama AS user_nama,
+          u.email AS user_email,
+          u.foto_profile AS user_foto_profile,
+
+          a.nama AS admin_nama,
+          a.email AS admin_email,
+
+          last_msg.message AS last_message,
+          last_msg.created_at AS last_message_at,
+
+          COALESCE(unread.unread_count, 0) AS unread_count
+
+       FROM chat_rooms cr
+
+       LEFT JOIN users u ON cr.user_id = u.id
+       LEFT JOIN users a ON cr.admin_id = a.id
+
+       LEFT JOIN LATERAL (
+          SELECT message, created_at
+          FROM chat_messages
+          WHERE room_id = cr.id
+          ORDER BY created_at DESC
+          LIMIT 1
+       ) last_msg ON true
+
+       LEFT JOIN LATERAL (
+          SELECT COUNT(*)::int AS unread_count
+          FROM chat_messages
+          WHERE room_id = cr.id
+            AND sender_id != $1
+            AND is_read = false
+       ) unread ON true
+
+       WHERE cr.user_id = $1 OR cr.admin_id = $1
+
+       ORDER BY COALESCE(last_msg.created_at, cr.updated_at) DESC`,
+      [user_id]
+    );
+
+    return res.status(200).json({
+      message: "Daftar room chat berhasil diambil",
+      data: result.rows,
+    });
+  } catch (error) {
+    console.error("Error get chat rooms:", error);
+
+    return res.status(500).json({
+      message: "Terjadi kesalahan server saat mengambil daftar room chat",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   getOrCreateChatRoom,
   sendMessage,
   getMessagesByRoom,
   markMessagesAsRead,
+  getChatRoomsByUser,
 };

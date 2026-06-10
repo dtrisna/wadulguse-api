@@ -5,6 +5,7 @@ const {
   sendMessage,
   getMessagesByRoom,
   markMessagesAsRead,
+  getChatRoomsByUser,
 } = require("../controllers/chatController");
 
 const router = express.Router();
@@ -152,5 +153,29 @@ router.get("/messages/:room_id", getMessagesByRoom);
  *         description: Terjadi kesalahan server
  */
 router.put("/messages/:room_id/read", markMessagesAsRead);
+
+/**
+ * @swagger
+ * /api/chat/rooms/user/{user_id}:
+ *   get:
+ *     summary: Mengambil daftar room chat berdasarkan user login
+ *     tags: [Chat]
+ *     parameters:
+ *       - in: path
+ *         name: user_id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         example: 1
+ *         description: ID user login. Jika admin, akan mengambil semua room dengan admin_id tersebut. Jika user, mengambil room milik user tersebut.
+ *     responses:
+ *       200:
+ *         description: Daftar room chat berhasil diambil
+ *       400:
+ *         description: user_id wajib diisi
+ *       500:
+ *         description: Terjadi kesalahan server
+ */
+router.get("/rooms/user/:user_id", getChatRoomsByUser);
 
 module.exports = router;
