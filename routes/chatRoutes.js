@@ -2,6 +2,8 @@ const express = require("express");
 
 const {
   getOrCreateChatRoom,
+  sendMessage,
+  getMessagesByRoom,
 } = require("../controllers/chatController");
 
 const router = express.Router();
@@ -42,5 +44,7 @@ const router = express.Router();
  *         description: Room chat berhasil dibuat
  */
 router.post("/room", getOrCreateChatRoom);
+router.post("/message", sendMessage);
+router.get("/messages/:room_id", getMessagesByRoom);
 
 module.exports = router;
