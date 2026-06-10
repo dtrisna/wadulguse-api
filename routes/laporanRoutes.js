@@ -229,7 +229,16 @@ router.get("/:id", getDetailLaporan);
  *       404:
  *         description: Laporan tidak ditemukan
  */
-router.put("/:id", updateLaporan);
+router.put("/:id", (req, res, next) => {
+  upload.single("media")(req, res, (err) => {
+    if (err) {
+      return res.status(400).json({
+        message: err.message,
+      });
+    }
+    next();
+  });
+}, updateLaporan);
 
 /**
  * @swagger

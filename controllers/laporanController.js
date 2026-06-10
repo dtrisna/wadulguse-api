@@ -313,33 +313,45 @@ const updateLaporan = async (req, res) => {
     const { id } = req.params;
 
     const {
+      user_id,
       judul,
       deskripsi,
+      jenis_laporan,
       latitude,
       longitude,
       alamat,
-      jenis_laporan,
-      user_id,
     } = req.body;
 
-    if (!judul || !deskripsi || !alamat || !jenis_laporan) {
+    if (!user_id) {
       return res.status(400).json({
-        message: "Judul, deskripsi, alamat, dan jenis laporan wajib diisi",
+        message: "user_id wajib diisi",
       });
     }
 
-    const checkLaporan = await pool.query(
+    if (!judul || !deskripsi || !jenis_laporan || !alamat) {
+      return res.status(400).json({
+        message: "judul, deskripsi, jenis_laporan, dan alamat wajib diisi",
+      });
+    }
+
+    const laporanResult = await pool.query(
       "SELECT * FROM laporan WHERE id = $1",
       [id]
     );
 
-    if (checkLaporan.rows.length === 0) {
+    if (laporanResult.rows.length === 0) {
       return res.status(404).json({
         message: "Laporan tidak ditemukan",
       });
     }
 
-    const laporan = checkLaporan.rows[0];
+    const laporan = laporanResult.rows[0];
+
+    if (Number(laporan.user_id) !== Number(user_id)) {
+      return res.status(403).json({
+        message: "Anda tidak memiliki akses untuk mengubah laporan ini",
+      });
+    }
 
     if (
       laporan.status === "dalam_proses_tindak_lanjut" ||
@@ -351,46 +363,75 @@ const updateLaporan = async (req, res) => {
       });
     }
 
-    if (user_id && laporan.user_id !== Number(user_id)) {
-      return res.status(403).json({
-        message: "Anda tidak memiliki akses untuk mengubah laporan ini",
+    let mediaUrl = laporan.media;
+
+    if (req.file) {
+      const uploadResult = await new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          {
+            folder: "wadulguse/laporan",
+            resource_type: "image",
+          },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result);
+          }
+        );
+
+        stream.end(req.file.buffer);
       });
+
+      mediaUrl = uploadResult.secure_url;
     }
 
-    const result = await pool.query(
+    const parsedLatitude =
+      latitude === undefined || latitude === null || latitude === ""
+        ? null
+        : Number(latitude);
+
+    const parsedLongitude =
+      longitude === undefined || longitude === null || longitude === ""
+        ? null
+        : Number(longitude);
+
+    const updateResult = await pool.query(
       `UPDATE laporan
        SET judul = $1,
            deskripsi = $2,
-           latitude = $3,
-           longitude = $4,
-           alamat = $5,
-           jenis_laporan = $6,
+           jenis_laporan = $3,
+           latitude = $4,
+           longitude = $5,
+           alamat = $6,
+           media = $7,
            updated_at = NOW()
-       WHERE id = $7
+       WHERE id = $8
        RETURNING *`,
       [
         judul,
         deskripsi,
-        latitude,
-        longitude,
-        alamat,
         jenis_laporan,
+        parsedLatitude,
+        parsedLongitude,
+        alamat,
+        mediaUrl,
         id,
       ]
     );
 
     return res.status(200).json({
       message: "Laporan berhasil diperbarui",
-      data: result.rows[0],
+      data: updateResult.rows[0],
     });
   } catch (error) {
     console.error("Error update laporan:", error);
+
     return res.status(500).json({
-      message: "Terjadi kesalahan server",
+      message: "Terjadi kesalahan server saat update laporan",
       error: error.message,
     });
   }
 };
+
 
 module.exports = {
   createLaporan,
