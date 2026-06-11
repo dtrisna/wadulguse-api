@@ -91,22 +91,34 @@ const getKomentarByLaporan = async (req, res) => {
       });
     }
 
-    const result = await pool.query(
-      `SELECT * FROM komentar
-       WHERE laporan_id = $1
-       ORDER BY created_at DESC`,
-      [laporanId]
+     const result = await pool.query(
+      `SELECT 
+          k.id,
+          k.laporan_id,
+          k.user_id,
+          k.komentar,
+          k.created_at,
+          k.updated,
+          u.nama,
+          u.email,
+          u.foto_profile
+       FROM komentar k
+       LEFT JOIN users u ON k.user_id = u.id
+       WHERE k.laporan_id = $1
+       ORDER BY k.created_at ASC`,
+      [laporan_id]
     );
 
     return res.status(200).json({
       success: true,
-      message: 'Komentar berdasarkan laporan berhasil diambil',
+      message: "Komentar berhasil diambil",
       data: result.rows,
     });
   } catch (error) {
+    console.error("Error get komentar:", error);
     return res.status(500).json({
       success: false,
-      message: 'Terjadi kesalahan pada server',
+      message: "Gagal mengambil komentar",
       error: error.message,
     });
   }
