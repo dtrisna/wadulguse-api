@@ -65,21 +65,21 @@ router.get('/', authMiddleware, getProfile);
  */
 router.put('/', authMiddleware, updateProfile);
 
-/**
- * @swagger
- * /api/profile:
- *   delete:
- *     summary: Hapus akun user
- *     tags: [Profile]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Akun berhasil dihapus
- *       401:
- *         description: Token tidak valid
- */
-router.delete('/', authMiddleware, deleteProfile);
+// /**
+//  * @swagger
+//  * /api/profile:
+//  *   delete:
+//  *     summary: Hapus akun user
+//  *     tags: [Profile]
+//  *     security:
+//  *       - bearerAuth: []
+//  *     responses:
+//  *       200:
+//  *         description: Akun berhasil dihapus
+//  *       401:
+//  *         description: Token tidak valid
+//  */
+// router.delete('/', authMiddleware, deleteProfile);
 
 /**
  * @swagger
