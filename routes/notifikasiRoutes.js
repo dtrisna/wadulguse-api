@@ -25,31 +25,31 @@ const router = express.Router();
  */
 router.post("/send", sendNotifikasi);
 
-/**
- * @swagger
- * /api/notifikasi/{user_id}:
- *   get:
- *     summary: Menampilkan notifikasi berdasarkan user
- *     tags: [Notifikasi]
- */
-router.get("/:user_id", getNotifikasiByUser);
+// /**
+//  * @swagger
+//  * /api/notifikasi/{user_id}:
+//  *   get:
+//  *     summary: Menampilkan notifikasi berdasarkan user
+//  *     tags: [Notifikasi]
+//  */
+// router.get("/:user_id", getNotifikasiByUser);
 
-/**
- * @swagger
- * /api/notifikasi/{id}/read:
- *   put:
- *     summary: Menandai notifikasi sudah dibaca
- *     tags: [Notifikasi]
- */
-router.put("/:id/read", readNotifikasi);
+// /**
+//  * @swagger
+//  * /api/notifikasi/{id}/read:
+//  *   put:
+//  *     summary: Menandai notifikasi sudah dibaca
+//  *     tags: [Notifikasi]
+//  */
+// router.put("/:id/read", readNotifikasi);
 
-/**
- * @swagger
- * /api/notifikasi/{id}:
- *   delete:
- *     summary: Menghapus notifikasi
- *     tags: [Notifikasi]
- */
-router.delete("/:id", deleteNotifikasi);
+// /**
+//  * @swagger
+//  * /api/notifikasi/{id}:
+//  *   delete:
+//  *     summary: Menghapus notifikasi
+//  *     tags: [Notifikasi]
+//  */
+// router.delete("/:id", deleteNotifikasi);
 
 module.exports = router;

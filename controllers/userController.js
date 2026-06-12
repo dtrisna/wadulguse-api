@@ -186,42 +186,42 @@ const updateUser = async (req, res) => {
 };
 
 // DELETE user
-const deleteUser = async (req, res) => {
-  try {
-    const { id } = req.params;
+// const deleteUser = async (req, res) => {
+//   try {
+//     const { id } = req.params;
 
-    const result = await pool.query(
-      `DELETE FROM users
-       WHERE id = $1
-       RETURNING id, nama, email`,
-      [id]
-    );
+//     const result = await pool.query(
+//       `DELETE FROM users
+//        WHERE id = $1
+//        RETURNING id, nama, email`,
+//       [id]
+//     );
 
-    if (result.rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: 'User tidak ditemukan',
-      });
-    }
+//     if (result.rows.length === 0) {
+//       return res.status(404).json({
+//         success: false,
+//         message: 'User tidak ditemukan',
+//       });
+//     }
 
-    res.status(200).json({
-      success: true,
-      message: 'User berhasil dihapus',
-      data: result.rows[0],
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Terjadi kesalahan server',
-      error: error.message,
-    });
-  }
-};
+//     res.status(200).json({
+//       success: true,
+//       message: 'User berhasil dihapus',
+//       data: result.rows[0],
+//     });
+//   } catch (error) {
+//     res.status(500).json({
+//       success: false,
+//       message: 'Terjadi kesalahan server',
+//       error: error.message,
+//     });
+//   }
+// };
 
 module.exports = {
   getAllUsers,
   getUserById,
   createUser,
   updateUser,
-  deleteUser,
+  // deleteUser,
 };

@@ -227,27 +227,27 @@ router.get('/:id', authMiddleware, getUserById);
  */
 router.put('/:id', authMiddleware, updateUser);
 
-/**
- * @swagger
- * /api/users/{id}:
- *   delete:
- *     summary: Menghapus user berdasarkan ID
- *     tags: [User]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *         description: ID user
- *     responses:
- *       200:
- *         description: User berhasil dihapus
- *       404:
- *         description: User tidak ditemukan
- */
-router.delete('/:id', authMiddleware, deleteUser);
+// /**
+//  * @swagger
+//  * /api/users/{id}:
+//  *   delete:
+//  *     summary: Menghapus user berdasarkan ID
+//  *     tags: [User]
+//  *     security:
+//  *       - bearerAuth: []
+//  *     parameters:
+//  *       - in: path
+//  *         name: id
+//  *         required: true
+//  *         schema:
+//  *           type: integer
+//  *         description: ID user
+//  *     responses:
+//  *       200:
+//  *         description: User berhasil dihapus
+//  *       404:
+//  *         description: User tidak ditemukan
+//  */
+// router.delete('/:id', authMiddleware, deleteUser);
 
 module.exports = router;
